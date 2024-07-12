@@ -3,13 +3,9 @@ user_message:
   - Update the 'activation_key' and 'org_id' extra variables for 'LINUX / Register with Insights'. https://access.redhat.com/management/activation_keys
   - Update Credential for Insights Inventory with Red Hat account.
   - Add variables for system_roles. https://console.redhat.com/ansible/automation-hub/repo/published/redhat/rhel_system_roles
-controller_components:
-  - projects
-  - credential_types
-  - credentials
-  - inventory_sources
-  - job_templates
 
+# "!unsafe" used to pass raw jinja2 through to the injector definition, see
+# https://github.com/redhat-cop/controller_configuration/tree/devel/roles/credential_types#formating-injectors
 controller_credential_types:
   - name: Insights Collection
     kind: cloud
@@ -24,20 +20,21 @@ controller_credential_types:
           secret: true
     injectors:
       env:
-        INSIGHTS_USER: "{% raw %}{  { insights_user  }}{% endraw %}"
-        INSIGHTS_PASSWORD: "{% raw %}{  { insights_password  }}{% endraw %}"
+        INSIGHTS_USER: !unsafe '{{ insights_user }}'
+        INSIGHTS_PASSWORD: !unsafe '{{ insights_password }}'
 
 controller_credentials:
   - name: Insights Inventory
     credential_type: Insights Collection
     organization: Default
+    state: exists
     inputs:
       insights_user: REPLACEME
       insights_password: REPLACEME
 
 controller_inventory_sources:
   - name: Insights Inventory
-    inventory: Workshop Inventory
+    inventory: Demo Inventory
     source: scm
     source_project: Ansible official demo project
     source_path: linux/inventory.insights.yml
@@ -46,14 +43,14 @@ controller_inventory_sources:
 controller_templates:
   - name: "LINUX / Register with Insights"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/ec2_register.yml"
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     extra_vars:
       activation_key: !unsafe "RHEL{{ ansible_distribution_major_version }}_{{ env }}"
@@ -85,7 +82,7 @@ controller_templates:
 
   - name: "LINUX / Troubleshoot"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/tshoot.yml"
     notification_templates_started: Telemetry
@@ -93,7 +90,7 @@ controller_templates:
     notification_templates_error: Telemetry
     use_fact_cache: true
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -106,14 +103,14 @@ controller_templates:
 
   - name: "LINUX / Temporary Sudo"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/temp_sudo.yml"
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -135,7 +132,7 @@ controller_templates:
 
   - name: "LINUX / Patching"
     job_type: check
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/patching.yml"
     execution_environment: Default execution environment
@@ -145,7 +142,7 @@ controller_templates:
     use_fact_cache: true
     ask_job_type_on_launch: true
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -158,7 +155,7 @@ controller_templates:
 
   - name: "LINUX / Start Service"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/service_start.yml"
     notification_templates_started: Telemetry
@@ -166,7 +163,7 @@ controller_templates:
     notification_templates_error: Telemetry
     use_fact_cache: true
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -183,7 +180,7 @@ controller_templates:
 
   - name: "LINUX / Stop Service"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/service_stop.yml"
     notification_templates_started: Telemetry
@@ -191,7 +188,7 @@ controller_templates:
     notification_templates_error: Telemetry
     use_fact_cache: true
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -208,14 +205,14 @@ controller_templates:
 
   - name: "LINUX / Run Shell Script"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/run_script.yml"
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -233,14 +230,14 @@ controller_templates:
   - name: "LINUX / Fact Scan"
     project: "Ansible official demo project"
     playbook: linux/fact_scan.yml
-    inventory: Workshop Inventory
+    inventory: Demo Inventory
     execution_environment: Default execution environment
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     use_fact_cache: true
     credentials:
-      - Workshop Credential
+      - Demo Credential
     survey_enabled: true
     survey:
       name: ''
@@ -253,14 +250,14 @@ controller_templates:
 
   - name: "LINUX / Podman Webserver"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/podman.yml"
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -278,7 +275,7 @@ controller_templates:
 
   - name: "LINUX / System Roles"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/system_roles.yml"
     notification_templates_started: Telemetry
@@ -292,7 +289,7 @@ controller_templates:
       selinux_policy: targeted
       selinux_state: enforcing
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -305,7 +302,7 @@ controller_templates:
 
   - name: "LINUX / Install Web Console (cockpit)"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/system_roles.yml"
     notification_templates_started: Telemetry
@@ -317,7 +314,7 @@ controller_templates:
       system_roles:
         - cockpit
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -339,14 +336,14 @@ controller_templates:
 
   - name: "LINUX / DISA STIG"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/compliance.yml"
     notification_templates_started: Telemetry
     notification_templates_success: Telemetry
     notification_templates_error: Telemetry
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     extra_vars:
       sudo_remove_nopasswd: false
     survey_enabled: true
@@ -359,13 +356,96 @@ controller_templates:
           variable: _hosts
           required: true
 
+  - name: "LINUX / Multi-profile Compliance"
+    job_type: run
+    inventory: "Demo Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance-enforce.yml"
+    notification_templates_started: Telemetry
+    notification_templates_success: Telemetry
+    notification_templates_error: Telemetry
+    credentials:
+      - "Demo Credential"
+    extra_vars:
+      # used by CIS profile role
+      sudo_require_authentication: false
+      # used by STIG profile role
+      sudo_remove_nopasswd: false
+      sudo_remove_no_authenticate: false
+      # used by CIS and STIG profile role
+      accounts_password_set_max_life_existing: false
+      # used by the CJIS profile role
+      service_firewalld_enabled: false
+      firewalld_sshd_port_enabled: false
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Server Name or Pattern
+          type: text
+          variable: _hosts
+          required: true
+        - question_name: Compliance Profile
+          type: multiplechoice
+          variable: compliance_profile
+          required: true
+          choices:
+            - cis
+            - cjis
+            - cui
+            - hipaa
+            - ospp
+            - pci_dss
+            - stig
+
+  - name: "LINUX / Multi-profile Compliance Report"
+    job_type: run
+    inventory: "Demo Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance-report.yml"
+    notification_templates_started: Telemetry
+    notification_templates_success: Telemetry
+    notification_templates_error: Telemetry
+    credentials:
+      - "Demo Credential"
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Server Name or Pattern
+          type: text
+          variable: _hosts
+          required: true
+        - question_name: Compliance Profile
+          type: multiplechoice
+          variable: compliance_profile
+          required: true
+          choices:
+            - cis
+            - cjis
+            - cui
+            - hipaa
+            - ospp
+            - pci_dss
+            - stig
+        - question_name: Use httpd on the target host(s) to access reports locally?
+          type: multiplechoice
+          variable: use_httpd
+          required: true
+          choices:
+            - "true"
+            - "false"
+          default: "true"
+
   - name: "LINUX / Insights Compliance Scan"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/insights_compliance_scan.yml"
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -386,7 +466,7 @@ controller_templates:
 
   - name: "LINUX / Deploy Application"
     job_type: run
-    inventory: "Workshop Inventory"
+    inventory: "Demo Inventory"
     project: "Ansible official demo project"
     playbook: "linux/deploy_application.yml"
     notification_templates_started: Telemetry
@@ -394,7 +474,7 @@ controller_templates:
     notification_templates_error: Telemetry
     use_fact_cache: true
     credentials:
-      - "Workshop Credential"
+      - "Demo Credential"
     survey_enabled: true
     survey:
       name: ''
@@ -408,3 +488,5 @@ controller_templates:
           type: text
           variable: application
           required: true
+
+...

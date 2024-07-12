@@ -2,20 +2,14 @@
 - name: Setup demo
   hosts: localhost
   gather_facts: false
-
   tasks:
     - name: Default Components
       ansible.builtin.include_role:
-        name: "redhat_cop.controller_configuration.{{ item }}"
-      loop: "{{ controller_components }}"
-      vars:
-        controller_components:
-          - notification_templates
-          - job_templates
-          - settings
+        name: infra.controller_configuration.dispatch
+      vars:  # noqa var-naming[no-role-prefix]
         controller_execution_environments:
           - name: product-demos
-            image: http://quay.io/acme_corp/product-demos-ee:latest
+            image: quay.io/acme_corp/product-demos-ee:latest
         controller_organizations:
           - name: Default
             default_environment: product-demos
@@ -30,7 +24,7 @@
         controller_templates:
           - name: "SUBMIT FEEDBACK"
             job_type: run
-            inventory: "Workshop Inventory"
+            inventory: "Demo Inventory"
             project: "Ansible official demo project"
             playbook: "feedback.yml"
             execution_environment: Default execution environment
@@ -54,22 +48,23 @@
           - name: "SESSION_COOKIE_AGE"
             value: 180000
 
+    - name: Create reusable deployment ID
+      ansible.builtin.set_fact:
+        _deployment_id: '{{ lookup("ansible.builtin.password", "{{ playbook_dir }}/.deployment_id", chars=["ascii_lowercase", "digits"], length=5) }}'
+
     - name: "Include configuration for {{ demo }}"
       ansible.builtin.include_vars: "{{ demo }}/setup.yml"
 
     - name: Demo Components
       ansible.builtin.include_role:
-        name: "redhat_cop.controller_configuration.{{ item }}"
-      loop: "{{ controller_components }}"
-      when:
-        - controller_components | d("") | length > 0
+        name: "infra.controller_configuration.dispatch"
 
     - name: Log Demo
       ansible.builtin.uri:
         url: https://docs.google.com/forms/d/e/1FAIpQLSdIZ77YpETjEfGOoYlXtMnQiU-6M7QFlb2hJA4ujo25QYb2jw/formResponse
         method: POST
         body: "ifq&entry.1569353616={{ demo }} &entry.498055740={{ lookup('ansible.builtin.env', 'AWX_HOST') }}&sumbit=Submit"
-      ignore_errors: true # noqa: ignore-errors - connectivity should not fail play
+      ignore_errors: true  # noqa: ignore-errors - connectivity should not fail play
 
     - name: Print Message
       ansible.builtin.debug:
